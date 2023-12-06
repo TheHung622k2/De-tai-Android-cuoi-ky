@@ -16,33 +16,31 @@ import androidx.annotation.Nullable;
 
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 
-import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class BottomDialog extends BottomSheetDialogFragment {
     private TextView title, link, btn_visit;
     private ImageView close;
-    private String fetchURL;
+    private String fetchurl;
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.bottom_dialog, container, false);
+
         title = view.findViewById(R.id.txt_title);
         link = view.findViewById(R.id.txt_link);
         btn_visit = view.findViewById(R.id.visit);
         close = view.findViewById(R.id.close);
+        title.setText(fetchurl);
 
-        title.setText(fetchURL);
-
-        // Khi nguoi dung nhan vao nut truy cap, no se dua ho den data duoc luu tru trong ma QR
         btn_visit.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent i = new Intent("android.intent.action.VIEW");
-                i.setData(Uri.parse(fetchURL));
-                startActivity(i);
+                Intent intent = new Intent("android.intent.action.VIEW");
+                intent.setData(Uri.parse(fetchurl));
+                startActivity(intent);
             }
         });
 
@@ -52,19 +50,17 @@ public class BottomDialog extends BottomSheetDialogFragment {
                 dismiss();
             }
         });
-
         return view;
     }
 
-    public void fetchURL(String url) {
+    public void fetchurl(String url) {
         ExecutorService executorService = Executors.newSingleThreadExecutor();
         Handler handler = new Handler(Looper.getMainLooper());
         executorService.execute(new Runnable() {
             @Override
             public void run() {
-                fetchURL = url;
+                fetchurl = url;
             }
         });
     }
-
 }

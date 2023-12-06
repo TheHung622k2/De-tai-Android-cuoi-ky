@@ -1,8 +1,17 @@
 package vn.com.phamthehung.qrscanner;
 
+import android.Manifest;
+import android.annotation.SuppressLint;
+import android.content.pm.PackageManager;
+import android.graphics.Point;
+import android.graphics.Rect;
+import android.media.Image;
+import android.os.Bundle;
+import android.util.Size;
+import android.widget.Toast;
+
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.camera.core.Camera;
 import androidx.camera.core.CameraSelector;
 import androidx.camera.core.ImageAnalysis;
 import androidx.camera.core.ImageCapture;
@@ -13,16 +22,6 @@ import androidx.camera.view.PreviewView;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.FragmentManager;
-
-import android.Manifest;
-import android.annotation.SuppressLint;
-import android.content.pm.PackageManager;
-import android.graphics.Point;
-import android.graphics.Rect;
-import android.media.Image;
-import android.os.Bundle;
-import android.util.Size;
-import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
@@ -35,7 +34,8 @@ import com.google.mlkit.vision.barcode.BarcodeScanning;
 import com.google.mlkit.vision.barcode.common.Barcode;
 import com.google.mlkit.vision.common.InputImage;
 
-import java.io.Reader;
+import org.jetbrains.annotations.NotNull;
+
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -57,7 +57,6 @@ public class MainActivity extends AppCompatActivity {
         previewView = findViewById(R.id.previewView);
         this.getWindow().setFlags(1024, 1024);
 
-        // Background JOB
         cameraExecutor = Executors.newSingleThreadExecutor();
         cameraProviderFuture = ProcessCameraProvider.getInstance(this);
 
@@ -67,18 +66,13 @@ public class MainActivity extends AppCompatActivity {
         cameraProviderFuture.addListener(new Runnable() {
             @Override
             public void run() {
-                // In Background JOB
-
                 try {
-                    if (ActivityCompat.checkSelfPermission(MainActivity.this, Manifest.permission.CAMERA) != (PackageManager.PERMISSION_GRANTED)) {
-
-                        ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.CAMERA}, 101);
-                    } else {
-
+                    if(ActivityCompat.checkSelfPermission(MainActivity.this, Manifest.permission.CAMERA)!=(PackageManager.PERMISSION_GRANTED)){
+                        ActivityCompat.requestPermissions(MainActivity.this,new String[]{Manifest.permission.CAMERA},101);
+                    }
+                    else{
                         ProcessCameraProvider processCameraProvider = (ProcessCameraProvider) cameraProviderFuture.get();
                         bindpreview(processCameraProvider);
-
-
                     }
                 } catch (ExecutionException e) {
                     e.printStackTrace();
@@ -91,10 +85,8 @@ public class MainActivity extends AppCompatActivity {
 
     // Yeu cau quyen truy cap tu nguoi dung
     @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+    public void onRequestPermissionsResult(int requestCode, @NonNull @NotNull String[] permissions, @NonNull @NotNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-
-
         if (requestCode == 101 && grantResults.length > 0) {
             ProcessCameraProvider processCameraProvider = null;
             try {
@@ -106,8 +98,6 @@ public class MainActivity extends AppCompatActivity {
             }
             bindpreview(processCameraProvider);
         }
-
-
     }
 
     private void bindpreview(ProcessCameraProvider processCameraProvider) {
@@ -115,29 +105,24 @@ public class MainActivity extends AppCompatActivity {
         CameraSelector cameraSelector = new CameraSelector.Builder().requireLensFacing(
                 CameraSelector.LENS_FACING_BACK).build();
         preview.setSurfaceProvider(previewView.getSurfaceProvider());
-
         ImageCapture imageCapture = new ImageCapture.Builder().build();
         ImageAnalysis imageAnalysis = new ImageAnalysis.Builder()
                 .setTargetResolution(new Size(1280, 720))
                 .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                 .build();
-
         imageAnalysis.setAnalyzer(cameraExecutor, analyzer);
         processCameraProvider.unbindAll();
         processCameraProvider.bindToLifecycle(this, cameraSelector, preview, imageCapture, imageAnalysis);
-
-
     }
-
 
     // Image analyzer class
     public class MyImageAnalyzer implements ImageAnalysis.Analyzer {
         private FragmentManager fragmentManager;
-        private BottomDialog bottomDialog;
+        private BottomDialog bd;
 
-        public MyImageAnalyzer(FragmentManager supportFragmentManager) {
-            this.fragmentManager = supportFragmentManager;
-            bottomDialog = new BottomDialog();
+        public MyImageAnalyzer(FragmentManager fragmentManager) {
+            this.fragmentManager = fragmentManager;
+            bd = new BottomDialog();
         }
 
         // Quet ma vach
@@ -148,7 +133,6 @@ public class MainActivity extends AppCompatActivity {
 
         private void ScanBarCode(ImageProxy image) {
             @SuppressLint("UnsafeOptInUsageError") Image image1 = image.getImage();
-
             assert image1 != null;
             InputImage inputImage = InputImage.fromMediaImage(image1, image.getImageInfo().getRotationDegrees());
 
@@ -164,7 +148,6 @@ public class MainActivity extends AppCompatActivity {
                         @Override
                         public void onSuccess(List<Barcode> barcodes) {
                             ReaderBarCodeData(barcodes);
-
                         }
                     }).addOnFailureListener(new OnFailureListener() {
                         @Override
@@ -174,11 +157,10 @@ public class MainActivity extends AppCompatActivity {
                         }
                     }).addOnCompleteListener(new OnCompleteListener<List<Barcode>>() {
                         @Override
-                        public void onComplete(@NonNull Task<List<Barcode>> task) {
+                        public void onComplete(@NonNull @NotNull Task<List<Barcode>> task) {
                             image.close();
                         }
                     });
-
         }
 
         private void ReaderBarCodeData(List<Barcode> barcodes) {
@@ -200,10 +182,11 @@ public class MainActivity extends AppCompatActivity {
                         break;
                     // Barcode cua link dieu huong
                     case Barcode.TYPE_URL:
-                        if (bottomDialog.isAdded()) {
-                            bottomDialog.show(fragmentManager, "");
+                        if (!bd.isAdded()) {
+                            bd.show(fragmentManager, "");
                         }
-                        bottomDialog.fetchURL(barcode.getUrl().getUrl());
+                        bd.fetchurl(barcode.getUrl().getUrl());
+                        String title = barcode.getUrl().getTitle();
                         String url = barcode.getUrl().getUrl();
                         break;
                 }
