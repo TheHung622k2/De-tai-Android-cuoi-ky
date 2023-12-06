@@ -17,6 +17,8 @@ import androidx.fragment.app.FragmentManager;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.pm.PackageManager;
+import android.graphics.Point;
+import android.graphics.Rect;
 import android.media.Image;
 import android.os.Bundle;
 import android.util.Size;
@@ -71,7 +73,7 @@ public class MainActivity extends AppCompatActivity {
                     if (ActivityCompat.checkSelfPermission(MainActivity.this, Manifest.permission.CAMERA) != (PackageManager.PERMISSION_GRANTED)) {
 
                         ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.CAMERA}, 101);
-                    } else{
+                    } else {
 
                         ProcessCameraProvider processCameraProvider = (ProcessCameraProvider) cameraProviderFuture.get();
                         bindpreview(processCameraProvider);
@@ -106,8 +108,6 @@ public class MainActivity extends AppCompatActivity {
         }
 
 
-
-
     }
 
     private void bindpreview(ProcessCameraProvider processCameraProvider) {
@@ -127,14 +127,14 @@ public class MainActivity extends AppCompatActivity {
         processCameraProvider.bindToLifecycle(this, cameraSelector, preview, imageCapture, imageAnalysis);
 
 
-
     }
 
 
     // Image analyzer class
-    public class MyImageAnalyzer implements ImageAnalysis.Analyzer{
+    public class MyImageAnalyzer implements ImageAnalysis.Analyzer {
         private FragmentManager fragmentManager;
         private BottomDialog bottomDialog;
+
         public MyImageAnalyzer(FragmentManager supportFragmentManager) {
             this.fragmentManager = supportFragmentManager;
             bottomDialog = new BottomDialog();
@@ -169,7 +169,7 @@ public class MainActivity extends AppCompatActivity {
                     }).addOnFailureListener(new OnFailureListener() {
                         @Override
                         public void onFailure(@NonNull Exception e) {
-                            // Neu doc Barcode that bai
+                            // Neu doc QR that bai
                             Toast.makeText(MainActivity.this, "Doc ma vach that bai!", Toast.LENGTH_SHORT).show();
                         }
                     }).addOnCompleteListener(new OnCompleteListener<List<Barcode>>() {
@@ -182,7 +182,32 @@ public class MainActivity extends AppCompatActivity {
         }
 
         private void ReaderBarCodeData(List<Barcode> barcodes) {
-            
+            for (Barcode barcode : barcodes) {
+
+                Rect bounds = barcode.getBoundingBox();
+                Point[] corners = barcode.getCornerPoints();
+
+                String rawValue = barcode.getRawValue();
+
+                int valueType = barcode.getValueType();
+
+                switch (valueType) {
+                    // Barcode cua Wifi
+                    case Barcode.TYPE_WIFI:
+                        String ssid = barcode.getWifi().getSsid();
+                        String password = barcode.getWifi().getPassword();
+                        int type = barcode.getWifi().getEncryptionType();
+                        break;
+                    // Barcode cua link dieu huong
+                    case Barcode.TYPE_URL:
+                        if (bottomDialog.isAdded()) {
+                            bottomDialog.show(fragmentManager, "");
+                        }
+                        bottomDialog.fetchURL(barcode.getUrl().getUrl());
+                        String url = barcode.getUrl().getUrl();
+                        break;
+                }
+            }
         }
     }
 }

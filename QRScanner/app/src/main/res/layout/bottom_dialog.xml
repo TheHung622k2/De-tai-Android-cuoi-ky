@@ -21,7 +21,7 @@
             android:layout_height="wrap_content"
             android:layout_centerHorizontal="true"
             android:gravity="center_horizontal"
-            android:text="@string/title"
+            android:text="Hello"
             android:textAlignment="center"
             android:textColor="@color/black" />
     </RelativeLayout>
@@ -32,7 +32,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
         android:layout_marginTop="10dp"
-        android:text="@string/link"
+        android:text="Link"
         android:textAlignment="center" />
 
     <TextView
@@ -44,7 +44,7 @@
         android:padding="12dp"
         android:paddingLeft="12dp"
         android:paddingBottom="4dp"
-        android:text="@string/visit_link"
+        android:text="Visit link"
         android:textAlignment="center"
         android:textColor="@android:color/holo_blue_dark" />
 </LinearLayout>
