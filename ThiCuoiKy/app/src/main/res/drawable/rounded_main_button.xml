@@ -1,0 +1,15 @@
+<!-- rounded_button.xml -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_pressed="false">
+        <shape android:shape="rectangle">
+            <corners android:radius="50dp" /> <!-- Điều này tạo ra góc cong -->
+            <solid android:color="#fff95b" /> <!-- Màu nền khi không được nhấn -->
+        </shape>
+    </item>
+    <item android:state_pressed="true">
+        <shape android:shape="rectangle">
+            <corners android:radius="50dp" /> <!-- Điều này tạo ra góc cong -->
+            <solid android:color="#f5e15f" /> <!-- Màu nền khi được nhấn -->
+        </shape>
+    </item>
+</selector>
