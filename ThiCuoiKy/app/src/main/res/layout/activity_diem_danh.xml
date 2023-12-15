@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context=".DiemDanhActivity">
+    <!-- Text View cho Tên sự kiện -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Tên sự kiện" />
+
+    <!-- Text View cho Tự động điền sau khi quét mã QR -->
+    <TextView
+        android:id="@+id/tvEventName"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Tự động điền sau khi quét mã QR" />
+
+    <!-- Text View cho Họ tên sinh viên -->
+    <TextView
+        android:id="@+id/textViewFullName"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Họ tên sinh viên" />
+
+    <!-- Plain Text để hiển thị Họ tên sinh viên -->
+    <EditText
+        android:id="@+id/edtFullName"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Nhập họ tên sinh viên"
+        android:minHeight="48dp" />
+
+    <!-- Text View cho Lớp sinh viên -->
+    <TextView
+        android:id="@+id/textViewStudentClass"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Lớp sinh viên" />
+
+    <!-- Plain Text để hiển thị Lớp sinh viên -->
+    <EditText
+        android:id="@+id/edtClass"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Nhập lớp sinh viên"
+        android:minHeight="48dp" />
+
+    <!-- Button Điểm danh -->
+    <Button
+        android:id="@+id/btnDiemDanh"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Điểm danh" />
+
+    <!-- Button Thoát -->
+    <Button
+        android:id="@+id/btnThoat"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Quay lại" />
+
+</LinearLayout>

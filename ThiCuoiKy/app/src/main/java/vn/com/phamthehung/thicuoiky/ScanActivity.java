@@ -2,6 +2,7 @@ package vn.com.phamthehung.thicuoiky;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Point;
 import android.graphics.Rect;
@@ -47,99 +48,74 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class ScanActivity extends AppCompatActivity {
-    ListenableFuture cameraProviderFuture; // biến yêu cầu một CameraProvider
-    ExecutorService cameraExecutor; // ?
-    PreviewView previewView; // biến UI để hiển thị trước từ camera
-    MyImageAnalyzer analyzer; // biến phân tích hình ảnh từ camera
+    ListenableFuture cameraProviderFuture;
+    ExecutorService cameraExecutor;
+    PreviewView previewView;
+    MyImageAnalyzer analyzer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_scan);
 
-        setupEventListeners(); // tlsk cho các buttons
+        setupEventListeners();
 
         previewView = findViewById(R.id.viewXemTruoc);
-        this.getWindow().setFlags(1024, 1024);
+
 
         cameraExecutor = Executors.newSingleThreadExecutor();
         cameraProviderFuture = ProcessCameraProvider.getInstance(this);
 
         analyzer = new MyImageAnalyzer(getSupportFragmentManager());
 
-        // cameraProviderFuture: Nhận thông báo về việc cung cấp máy ảnh
         cameraProviderFuture.addListener(new Runnable() {
             @Override
             public void run() {
                 try {
-                    // kiểm tra xem ứng dụng có quyền truy cập camera hay không?
                     if(ActivityCompat.checkSelfPermission(ScanActivity.this, android.Manifest.permission.CAMERA)!=(PackageManager.PERMISSION_GRANTED)){
-                        // nếu 'android.Manifest.permission.CAMERA' ko được cấp quyền thì y/cầu người dùng cấp quyền
                         ActivityCompat.requestPermissions(ScanActivity.this,new String[]{Manifest.permission.CAMERA},101);
                     }
-                    else{ // Kiểm tra xem CameraProvider có dùng được hay không
+                    else{
                         ProcessCameraProvider processCameraProvider = (ProcessCameraProvider) cameraProviderFuture.get();
                         bindPreview(processCameraProvider);
                     }
                 } catch (ExecutionException | InterruptedException e) {
-
+                    e.printStackTrace();
                 }
             }
         }, ContextCompat.getMainExecutor(this));
 
     }
 
-    // Chọn một máy ảnh rồi liên kết vòng đời và trường hợp sử dụng
     private void bindPreview(ProcessCameraProvider processCameraProvider) {
-        Preview preview = new Preview.Builder().build(); // B1: Tạo Preview
+        Preview preview = new Preview.Builder().build();
         CameraSelector cameraSelector = new CameraSelector
                 .Builder()
                 .requireLensFacing(
-                CameraSelector.LENS_FACING_BACK) // B2: Chỉ định tuỳ chọn LensFacing cho máy ảnh mà bạn muốn dùng.
+                CameraSelector.LENS_FACING_BACK)
                 .build();
-        preview.setSurfaceProvider(previewView.getSurfaceProvider()); // B4: Kết nối Preview với PreviewView
+        preview.setSurfaceProvider(previewView.getSurfaceProvider());
 
-        ImageCapture imageCapture = new ImageCapture.Builder().build(); // tạo đối tượng để chụp ảnh
-        ImageAnalysis imageAnalysis = new ImageAnalysis.Builder() // phân tích hình ảnh
-                .setTargetResolution(new Size(1280, 720)) // đặt độ phân giải hình ảnh
+        ImageCapture imageCapture = new ImageCapture.Builder().build();
+        ImageAnalysis imageAnalysis = new ImageAnalysis.Builder()
+                .setTargetResolution(new Size(1280, 720))
                 .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                 .build();
         imageAnalysis.setAnalyzer(cameraExecutor, analyzer);
 
-        // hủy kết nối tất cả các use case trước khi liên kết mới để đảm bảo không có xung đột giữa chúng
         processCameraProvider.unbindAll();
-        // B3: Liên kết máy ảnh đã chọn và mọi trường hợp sử dụng với vòng đời.
-        // bindToLifecycle() trả về đối tượng Camera
         processCameraProvider.bindToLifecycle(this, cameraSelector, preview, imageCapture, imageAnalysis);
     }
 
-    // yêu cầu quyền truy cập từ người dùng
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull @NotNull String[] permissions, @NonNull @NotNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == 101 && grantResults.length > 0) {
-            ProcessCameraProvider processCameraProvider = null;
-            try {
-                processCameraProvider = (ProcessCameraProvider) cameraProviderFuture.get();
-            } catch (ExecutionException | InterruptedException e) {
-                e.printStackTrace();
-            }
-            bindPreview(processCameraProvider);
-        }
-    }
-
-    // thiết lập sự kiện lắng nghe cho các nút
     private void setupEventListeners() {
         ImageView backImage = findViewById(R.id.backImage);
         TextView tvBack = findViewById(R.id.tvBack);
         Button btnMyQR = findViewById(R.id.btnMyQR);
         Button btnExistenceImages = findViewById(R.id.btnExistenceImages);
 
-        // Sự kiện lắng nghe cho ImageView và TextView
         backImage.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // Quay lại MainActivity khi nhấn vào ImageView
                 finish();
             }
         });
@@ -147,7 +123,6 @@ public class ScanActivity extends AppCompatActivity {
         tvBack.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // Quay lại MainActivity khi nhấn vào TextView
                 finish();
             }
         });
@@ -155,6 +130,7 @@ public class ScanActivity extends AppCompatActivity {
 
     // Class phân tích hình ảnh
     public class MyImageAnalyzer implements ImageAnalysis.Analyzer{
+        private boolean isQRScanned = false;
         FragmentManager fragmentManager;
         BottomDialog bd;
 
@@ -166,7 +142,9 @@ public class ScanActivity extends AppCompatActivity {
         // Quét mã QR
         @Override
         public void analyze(@NonNull ImageProxy image) {
-            ScanBarCode(image);
+            if (!isQRScanned) {
+                ScanBarCode(image);
+            }
         }
 
         private void ScanBarCode(ImageProxy image) {
@@ -178,7 +156,9 @@ public class ScanActivity extends AppCompatActivity {
                     .setBarcodeFormats(
                             Barcode.FORMAT_QR_CODE,
                             Barcode.FORMAT_AZTEC
-                    ).build();
+                    )
+                    .enableAllPotentialBarcodes() // Optional
+                    .build();
 
             BarcodeScanner scanner = BarcodeScanning.getClient(scannerOptions);
 
@@ -204,22 +184,20 @@ public class ScanActivity extends AppCompatActivity {
 
         private void ReaderBarCodeData(List<Barcode> barcodes) {
             for (Barcode barcode : barcodes) {
-
                 Rect bounds = barcode.getBoundingBox();
                 Point[] corners = barcode.getCornerPoints();
-
                 String rawValue = barcode.getRawValue();
-
                 int valueType = barcode.getValueType();
 
                 switch (valueType) {
-                    // QR code cua Wifi
+                    // QR code của Wifi (Chưa xử lý được)
                     case Barcode.TYPE_WIFI:
                         String ssid = Objects.requireNonNull(barcode.getWifi()).getSsid();
                         String password = barcode.getWifi().getPassword();
                         int type = barcode.getWifi().getEncryptionType();
                         break;
-                    // QR code cua link dieu huong
+
+                    // QR code của URL
                     case Barcode.TYPE_URL:
                         if (!bd.isAdded()) {
                             bd.show(fragmentManager, "");
@@ -227,6 +205,15 @@ public class ScanActivity extends AppCompatActivity {
                         bd.fetchURL(Objects.requireNonNull(barcode.getUrl()).getUrl());
                         String title = barcode.getUrl().getTitle();
                         String url = barcode.getUrl().getUrl();
+                        break;
+
+                    // QR code của việc điểm danh
+                    case Barcode.TYPE_TEXT:
+                        if (!isQRScanned) {
+                            Intent intent = new Intent(ScanActivity.this, DiemDanhActivity.class);
+                            startActivity(intent);
+                            isQRScanned = true; // Đặt isQRScanned thành true sau khi quét thành công
+                        }
                         break;
                 }
             }

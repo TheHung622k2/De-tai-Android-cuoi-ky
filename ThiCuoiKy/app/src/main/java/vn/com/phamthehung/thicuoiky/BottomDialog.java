@@ -28,11 +28,9 @@ public class BottomDialog extends BottomSheetDialogFragment {
     Button truyCap;
     String fetchURL; // biến để lưu địa chỉ URL của mã QR
 
-    // Phương thức được gọi khi bottom sheet đc tạo
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        // dùng inflater để chuyển đổi layout xml thành một đối tượng View
         // container: ViewGroup cha mà view sẽ được gắn vào bottom dialog
         // false: ko gắn tức thì vào container vì bd sẽ tự thêm view vào
         View view = inflater.inflate(R.layout.activity_bottom_dialog, container, false);
@@ -41,7 +39,6 @@ public class BottomDialog extends BottomSheetDialogFragment {
         close = view.findViewById(R.id.imgClose);
         truyCap = view.findViewById(R.id.btnVisit);
 
-        // đặt text của Tv 'duongDan' = text hiện tại của fetchURL
         // Khi bd được hiển thị, URL sẽ hiển thị trên TextView 'duongDan'
         duongDan.setText(fetchURL);
 
@@ -59,7 +56,7 @@ public class BottomDialog extends BottomSheetDialogFragment {
         close.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                dismiss(); // đóng bottom dialog
+                dismiss();
             }
         });
         return view;
@@ -67,7 +64,7 @@ public class BottomDialog extends BottomSheetDialogFragment {
 
     // lấy địa chỉ URL từ QR code
     public void fetchURL(String url) {
-        ExecutorService executorService = Executors.newSingleThreadExecutor(); // xử lý?
+        ExecutorService executorService = Executors.newSingleThreadExecutor();
         Handler handler = new Handler(Looper.getMainLooper());
         executorService.execute(new Runnable() {
             @Override
