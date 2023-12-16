@@ -58,7 +58,7 @@
 
     <!-- Button Thoát -->
     <Button
-        android:id="@+id/btnThoat"
+        android:id="@+id/btnQuayLai"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Quay lại" />

@@ -210,9 +210,11 @@ public class ScanActivity extends AppCompatActivity {
                     // QR code của việc điểm danh
                     case Barcode.TYPE_TEXT:
                         if (!isQRScanned) {
+                            String text = barcode.getDisplayValue(); // lấy nd văn bản
                             Intent intent = new Intent(ScanActivity.this, DiemDanhActivity.class);
+                            intent.putExtra("EVENT_NAME", text);
                             startActivity(intent);
-                            isQRScanned = true; // Đặt isQRScanned thành true sau khi quét thành công
+                            isQRScanned = true; // đặt thành true để dừng việc quét ảnh
                         }
                         break;
                 }

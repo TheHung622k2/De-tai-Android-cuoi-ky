@@ -27,7 +27,7 @@ public class MainActivity extends AppCompatActivity {
         btnExit.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                finishAffinity();
+                finishAffinity(); // Kết thúc tất cả các hoạt động liên quan đến ứng dụng
             }
         });
     }
