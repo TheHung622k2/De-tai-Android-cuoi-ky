@@ -190,14 +190,14 @@ public class ScanActivity extends AppCompatActivity {
                 int valueType = barcode.getValueType();
 
                 switch (valueType) {
-                    // QR code của Wifi (Chưa xử lý được)
+                    // QR code của Wifi
                     case Barcode.TYPE_WIFI:
                         String ssid = Objects.requireNonNull(barcode.getWifi()).getSsid();
                         String password = barcode.getWifi().getPassword();
                         int type = barcode.getWifi().getEncryptionType();
                         break;
 
-                    // QR code của URL
+                    // QR code của link điều hướng
                     case Barcode.TYPE_URL:
                         if (!bd.isAdded()) {
                             bd.show(fragmentManager, "");
@@ -210,7 +210,7 @@ public class ScanActivity extends AppCompatActivity {
                     // QR code của việc điểm danh
                     case Barcode.TYPE_TEXT:
                         if (!isQRScanned) {
-                            String text = barcode.getDisplayValue(); // lấy nd văn bản
+                            String text = barcode.getDisplayValue(); // lấy nd text
                             Intent intent = new Intent(ScanActivity.this, DiemDanhActivity.class);
                             intent.putExtra("EVENT_NAME", text);
                             startActivity(intent);

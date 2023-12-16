@@ -2,22 +2,28 @@ package vn.com.phamthehung.thicuoiky;
 
 import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 
 import java.time.LocalDateTime;
 
-// Class user
 public class DiemDanhActivity extends AppCompatActivity {
+    DatabaseReference databaseReference;
     TextView tenSK;
     EditText hoTenSV, lop;
     Button diemDanh, quayLai;
-    LocalDateTime tgDiemDanh;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        FirebaseDatabase database = FirebaseDatabase.getInstance();
+        databaseReference = database.getReference("Tên sự kiện");
         setContentView(R.layout.activity_diem_danh);
         timDieuKhien();
 
@@ -25,6 +31,26 @@ public class DiemDanhActivity extends AppCompatActivity {
         if (eventName != null) {
             fetchEventName(eventName);
         }
+
+        diemDanh.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String hoTen = hoTenSV.getText().toString();
+                String lopHoc = lop.getText().toString();
+                // lấy tg điểm danh
+                LocalDateTime tgDiemDanh = null;
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                    tgDiemDanh = LocalDateTime.now();
+                }
+                String thoiGianDiemDanh = tgDiemDanh.toString();
+                // tạo đối tượng User
+                User user = new User(hoTen, lopHoc, thoiGianDiemDanh);
+                // Lưu dữ liệu vào Realtime Database
+                databaseReference.child(tenSK.getText().toString()).push().setValue(user);
+                // Thông báo điểm danh thành công
+                Toast.makeText(DiemDanhActivity.this, "Điểm danh thành công", Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     // find Controls
