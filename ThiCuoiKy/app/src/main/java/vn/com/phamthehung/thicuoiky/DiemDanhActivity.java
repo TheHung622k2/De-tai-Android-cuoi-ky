@@ -51,6 +51,13 @@ public class DiemDanhActivity extends AppCompatActivity {
                 Toast.makeText(DiemDanhActivity.this, "Điểm danh thành công", Toast.LENGTH_SHORT).show();
             }
         });
+
+        quayLai.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                finish();
+            }
+        });
     }
 
     // find Controls

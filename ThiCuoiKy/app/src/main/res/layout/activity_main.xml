@@ -16,7 +16,7 @@
         android:layout_gravity="center"
         android:layout_marginTop="35dp"
         android:background="@color/white"
-        app:srcCompat="@drawable/img_app" />
+        app:srcCompat="@mipmap/img_app" />
 
     <TextView
         android:id="@+id/tvWelcome"

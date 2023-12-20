@@ -35,7 +35,7 @@
                     android:id="@+id/backImage"
                     android:layout_width="60dp"
                     android:layout_height="60dp"
-                    android:background="@drawable/img_turn_back"
+                    android:background="@mipmap/img_turn_back"
                     android:backgroundTint="@color/white" />
 
                 <TextView
