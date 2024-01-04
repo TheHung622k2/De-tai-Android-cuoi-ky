@@ -1,6 +1,11 @@
 package vn.com.phamthehung.thicuoiky;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
+
 import androidx.appcompat.app.AppCompatActivity;
+
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
@@ -12,6 +17,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
 import java.time.LocalDateTime;
+import java.util.Locale;
 
 public class DiemDanhActivity extends AppCompatActivity {
     DatabaseReference databaseReference;
@@ -37,16 +43,21 @@ public class DiemDanhActivity extends AppCompatActivity {
             public void onClick(View v) {
                 String hoTen = hoTenSV.getText().toString();
                 String lopHoc = lop.getText().toString();
-                // lấy tg điểm danh
-                LocalDateTime tgDiemDanh = null;
-                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-                    tgDiemDanh = LocalDateTime.now();
-                }
-                String thoiGianDiemDanh = tgDiemDanh.toString();
-                // tạo đối tượng User
+
+                String thoiGianDiemDanh = getFormattedTime();
+
+                // Tạo đối tượng User
                 User user = new User(hoTen, lopHoc, thoiGianDiemDanh);
-                // Lưu dữ liệu vào Realtime Database
-                databaseReference.child(tenSK.getText().toString()).push().setValue(user);
+
+                // Tạo một khóa duy nhất cho mỗi người dùng
+                String userId = databaseReference.child(tenSK.getText().toString()).push().getKey();
+
+                // Lưu dữ liệu vào Realtime Database với tên các nút con mong muốn
+                assert userId != null;
+                databaseReference.child(tenSK.getText().toString()).child(userId).child("Họ tên").setValue(user.getHoTen());
+                databaseReference.child(tenSK.getText().toString()).child(userId).child("Lớp").setValue(user.getLop());
+                databaseReference.child(tenSK.getText().toString()).child(userId).child("Thời gian điểm danh").setValue(user.getThoiGianDiemDanh());
+
                 // Thông báo điểm danh thành công
                 Toast.makeText(DiemDanhActivity.this, "Điểm danh thành công", Toast.LENGTH_SHORT).show();
             }
@@ -67,6 +78,13 @@ public class DiemDanhActivity extends AppCompatActivity {
         lop = findViewById(R.id.edtClass);
         diemDanh = findViewById(R.id.btnDiemDanh);
         quayLai = findViewById(R.id.btnQuayLai);
+    }
+
+    // Hàm để lấy thời gian đã định dạng
+    private String getFormattedTime() {
+        SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy 'vào lúc' HH:mm:ss", Locale.getDefault());
+        Date now = new Date();
+        return dateFormat.format(now);
     }
 
     // lấy tên sk từ QR code

@@ -11,8 +11,6 @@ import android.os.Bundle;
 import android.util.Size;
 import android.view.View;
 import android.widget.Button;
-import android.widget.ImageView;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -48,10 +46,10 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class ScanActivity extends AppCompatActivity {
-    ListenableFuture cameraProviderFuture;
-    ExecutorService cameraExecutor;
-    PreviewView previewView;
-    MyImageAnalyzer analyzer;
+    ListenableFuture cameraProviderFuture; // đợi và lấy CameraProvider.
+    ExecutorService cameraExecutor; // chạy các task liên quan đến Camera trên một luồng riêng biệt.
+    PreviewView previewView; // hiển thị ảnh trước của camera.
+    MyImageAnalyzer analyzer; // phân tích hình ảnh từ camera.
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -62,20 +60,26 @@ public class ScanActivity extends AppCompatActivity {
 
         previewView = findViewById(R.id.viewXemTruoc);
 
-
+        //  Tạo một ExecutorService với một luồng duy nhất (thực hiện các tác vụ liên quan đến camera trên một luồng riêng biệt)
         cameraExecutor = Executors.newSingleThreadExecutor();
+        // Tạo một ListenableFuture để lấy đối tượng CameraProvider.
+        // CameraProvider là một đối tượng cung cấp quyền truy cập và quản lý các thiết bị camera trên thiết bị.
         cameraProviderFuture = ProcessCameraProvider.getInstance(this);
 
+        // Khởi tạo một đối tượng của lớp MyImageAnalyzer để xử lý và phân tích hình ảnh từ camera
         analyzer = new MyImageAnalyzer(getSupportFragmentManager());
 
+        // Đăng ký một Listener để lắng nghe sự kiện khi ListenableFuture (cameraProviderFuture) có sẵn (khi đối tượng CameraProvider được khởi tạo).
         cameraProviderFuture.addListener(new Runnable() {
             @Override
             public void run() {
+                // kiểm tra xem ứng dụng có quyền truy cập camera hay không. Nếu không, yêu cầu người dùng cấp quyền (requestPermissions).
                 try {
-                    if(ActivityCompat.checkSelfPermission(ScanActivity.this, android.Manifest.permission.CAMERA)!=(PackageManager.PERMISSION_GRANTED)){
-                        ActivityCompat.requestPermissions(ScanActivity.this,new String[]{Manifest.permission.CAMERA},101);
+                    if (ActivityCompat.checkSelfPermission(ScanActivity.this, android.Manifest.permission.CAMERA) != (PackageManager.PERMISSION_GRANTED)) {
+                        ActivityCompat.requestPermissions(ScanActivity.this, new String[]{Manifest.permission.CAMERA}, 101);
                     }
-                    else{
+                    // Nếu có quyền truy cập, lấy đối tượng ProcessCameraProvider và gọi phương thức bindPreview để liên kết các use case của CameraX (Preview, ImageCapture, ImageAnalysis) và hiển thị hình ảnh camera trên giao diện người dùng.
+                    else {
                         ProcessCameraProvider processCameraProvider = (ProcessCameraProvider) cameraProviderFuture.get();
                         bindPreview(processCameraProvider);
                     }
@@ -84,43 +88,47 @@ public class ScanActivity extends AppCompatActivity {
                 }
             }
         }, ContextCompat.getMainExecutor(this));
-
     }
 
+    //Liên kết các use case của CameraX
     private void bindPreview(ProcessCameraProvider processCameraProvider) {
-        Preview preview = new Preview.Builder().build();
+        Preview preview = new Preview.Builder().build(); // Tạo một đối tượng Preview giúp hiển thị hình ảnh từ camera trực tiếp lên giao diện người dùng.
+        // Tạo một đối tượng CameraSelector để chọn camera cụ thể
         CameraSelector cameraSelector = new CameraSelector
                 .Builder()
                 .requireLensFacing(
-                CameraSelector.LENS_FACING_BACK)
+                        CameraSelector.LENS_FACING_BACK) // mặt sau camera
                 .build();
+        // hiển thị hình ảnh camera lên previewView (đối tượng PreviewView).
         preview.setSurfaceProvider(previewView.getSurfaceProvider());
 
+        // Tạo một đối tượng ImageCapture để chụp ảnh từ camera.
         ImageCapture imageCapture = new ImageCapture.Builder().build();
+        // phân tích hình ảnh từ camera
         ImageAnalysis imageAnalysis = new ImageAnalysis.Builder()
                 .setTargetResolution(new Size(1280, 720))
                 .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                 .build();
+        // Gán một Analyzer cho ImageAnalysis. analyzer là một đối tượng của lớp MyImageAnalyzer được khởi tạo trước đó. MyImageAnalyzer được sử dụng để xử lý và phân tích hình ảnh từ camera.
         imageAnalysis.setAnalyzer(cameraExecutor, analyzer);
 
+        // Hủy liên kết tất cả các use case trước đó của CameraProvider đảm bảo rằng khi thay đổi các cấu hình camera, không còn bất kỳ use case nào đang chạy.
         processCameraProvider.unbindAll();
+        // Liên kết các use case với CameraProvider và vòng đời của activity (this).
         processCameraProvider.bindToLifecycle(this, cameraSelector, preview, imageCapture, imageAnalysis);
     }
 
     private void setupEventListeners() {
-        ImageView backImage = findViewById(R.id.backImage);
-        TextView tvBack = findViewById(R.id.tvBack);
-        Button btnMyQR = findViewById(R.id.btnMyQR);
-        Button btnExistenceImages = findViewById(R.id.btnExistenceImages);
+        Button btnBack = findViewById(R.id.btnQuayLai);
 
-        backImage.setOnClickListener(new View.OnClickListener() {
+        btnBack.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 finish();
             }
         });
 
-        tvBack.setOnClickListener(new View.OnClickListener() {
+        btnBack.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 finish();
@@ -128,8 +136,8 @@ public class ScanActivity extends AppCompatActivity {
         });
     }
 
-    // Class phân tích hình ảnh
-    public class MyImageAnalyzer implements ImageAnalysis.Analyzer{
+    // Class phân tích hình ảnh từ camera
+    public class MyImageAnalyzer implements ImageAnalysis.Analyzer {
         private boolean isQRScanned = false;
         FragmentManager fragmentManager;
         BottomDialog bd;
@@ -139,7 +147,7 @@ public class ScanActivity extends AppCompatActivity {
             bd = new BottomDialog();
         }
 
-        // Quét mã QR
+        // Quét mã QR (Được gọi khi một frame mới từ camera được cung cấp)
         @Override
         public void analyze(@NonNull ImageProxy image) {
             if (!isQRScanned) {
@@ -147,6 +155,7 @@ public class ScanActivity extends AppCompatActivity {
             }
         }
 
+        // quét mã vạch từ hình ảnh được cung cấp.
         private void ScanBarCode(ImageProxy image) {
             @SuppressLint("UnsafeOptInUsageError") Image image1 = image.getImage();
             assert image1 != null;
@@ -166,7 +175,7 @@ public class ScanActivity extends AppCompatActivity {
                     .addOnSuccessListener(new OnSuccessListener<List<Barcode>>() {
                         @Override
                         public void onSuccess(List<Barcode> barcodes) {
-                            ReaderBarCodeData(barcodes);
+                            ReaderBarCodeData(barcodes); // Xử lý kết quả quét từ mã vạch, nhận diện các loại mã vạch khác nhau
                         }
                     }).addOnFailureListener(new OnFailureListener() {
                         @Override
@@ -182,6 +191,7 @@ public class ScanActivity extends AppCompatActivity {
                     });
         }
 
+        // Xử lý kết quả quét từ mã vạch, nhận diện các loại mã vạch khác nhau
         private void ReaderBarCodeData(List<Barcode> barcodes) {
             for (Barcode barcode : barcodes) {
                 Rect bounds = barcode.getBoundingBox();
@@ -190,13 +200,6 @@ public class ScanActivity extends AppCompatActivity {
                 int valueType = barcode.getValueType();
 
                 switch (valueType) {
-                    // QR code của Wifi
-                    case Barcode.TYPE_WIFI:
-                        String ssid = Objects.requireNonNull(barcode.getWifi()).getSsid();
-                        String password = barcode.getWifi().getPassword();
-                        int type = barcode.getWifi().getEncryptionType();
-                        break;
-
                     // QR code của link điều hướng
                     case Barcode.TYPE_URL:
                         if (!bd.isAdded()) {

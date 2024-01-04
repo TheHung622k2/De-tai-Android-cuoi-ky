@@ -20,33 +20,27 @@ import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-// Class này được sử dụng cho việc hiển thị một bottom sheet (cửa sổ hiển thị từ dưới đáy của màn hình)
 public class BottomDialog extends BottomSheetDialogFragment {
     TextView duongDan;
     ImageView close;
     Button truyCap;
-    String fetchURL; // biến để lưu địa chỉ URL của mã QR
+    String fetchURL;
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        // container: ViewGroup cha mà view sẽ được gắn vào bottom dialog
-        // false: ko gắn tức thì vào container vì bd sẽ tự thêm view vào
         View view = inflater.inflate(R.layout.activity_bottom_dialog, container, false);
 
         duongDan = view.findViewById(R.id.tvURL);
         close = view.findViewById(R.id.imgClose);
         truyCap = view.findViewById(R.id.btnVisit);
 
-        // Khi bd được hiển thị, URL sẽ hiển thị trên TextView 'duongDan'
         duongDan.setText(fetchURL);
 
         truyCap.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // tạo một đối tượng Intent với hành động VIEW. Hđ này đc dùng để mở nội dung dạng view
                 Intent intent = new Intent("android.intent.action.VIEW");
-                // truyền địa chỉ URL cho intent
                 intent.setData(Uri.parse(fetchURL));
                 startActivity(intent);
             }
@@ -61,7 +55,6 @@ public class BottomDialog extends BottomSheetDialogFragment {
         return view;
     }
 
-    // lấy địa chỉ URL từ QR code
     public void fetchURL(String url) {
         ExecutorService executorService = Executors.newSingleThreadExecutor();
         Handler handler = new Handler(Looper.getMainLooper());
